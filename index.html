@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kofuku Social | Blog Management & Template</title>
+    <!-- Google Fonts: Inter & Manrope -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Mammoth.js for client-side semantic DOCX parsing & image extraction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
+    <script src="blog.js" defer></script>
+</head>
+<body>
+
+    <!-- Scroll Reading Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-bar" id="scrollBodyBar"></div>
+    </div>
+
+    <!-- Top Sticky Header -->
+    <header id="topHeaderHolder">
+        <div class="header-container">
+            <div class="brand-section">
+                <button type="button" class="menu-hamburger-btn" aria-label="Open menu" id="menuToggleBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <a href="#" class="brand-logo-link" onclick="switchMainView('public'); return false;">
+                    <div class="logo-text">Kofuku<span>Social</span></div>
+                </a>
+            </div>
+
+            <!-- Global View Mode Switcher -->
+            <div class="view-mode-tabs">
+                <button type="button" class="view-tab-btn active" id="tabAdminBtn" onclick="switchMainView('admin')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Admin Panel
+                </button>
+                <button type="button" class="view-tab-btn" id="tabPublicBtn" onclick="switchMainView('public')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    Public Website
+                </button>
+            </div>
+
+            <div class="nav-right">
+                <div class="search-bar-wrap">
+                    <svg class="search-icon" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="9" r="7"></circle>
+                        <line x1="14" y1="14" x2="18" y2="18"></line>
+                    </svg>
+                    <input type="text" class="search-input" id="globalNavSearch" placeholder="Search for Trending..." />
+                </div>
+                <div class="auth-buttons">
+                    <button class="btn-signin" type="button">Sign In</button>
+                    <button class="btn-signup" type="button">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Floating Live Preview Toolbar (Visible when Admin previews draft) -->
+    <div class="preview-floating-bar" id="previewToolbar" style="display: none;">
+        <span>Live Preview Mode</span>
+        <span class="preview-badge-status" id="previewStatusBadge">DRAFT</span>
+        <button class="action-btn" style="background:#fff; color:#111;" onclick="openEditModalFromPreview()">Edit Document</button>
+        <button class="btn-primary" style="padding: 6px 14px; font-size: 13px;" id="previewPublishBtn" onclick="publishCurrentPreview()">Publish Blog</button>
+        <button class="action-btn" style="background:transparent; color:#fff; border-color:#64748b;" onclick="exitPreviewMode()">Exit Preview</button>
+    </div>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main>
+
+        <!-- ================================================================
+             1. ADMIN PANEL VIEW
+             ================================================================ -->
+        <section class="admin-view" id="adminSection">
+            <div class="admin-header">
+                <div class="admin-title-row">
+                    <div>
+                        <h1 class="admin-heading">Blog Management Admin Panel</h1>
+                        <p class="admin-subheading">DOCX-based blog creation, template mapping, preview and publishing</p>
+                    </div>
+                    <div class="admin-actions">
+                        <button class="btn-primary" onclick="triggerFileInput()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            Upload DOCX File
+                        </button>
+                        <button class="btn-outline" onclick="openNewBlogModal()">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Create Empty
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="admin-stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">📚</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="statTotal">0</div>
+                        <div class="stat-label">Total Blogs</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">✅</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="statPublished">0</div>
+                        <div class="stat-label">Published Live</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon amber">📝</div>
+                    <div class="stat-info">
+                        <div class="stat-value" id="statDrafts">0</div>
+                        <div class="stat-label">Drafts & Staging</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DOCX Upload Dropzone Card -->
+            <div class="upload-card-zone" id="uploadDropzone">
+                <input type="file" id="docxFileInput" class="file-input-hidden" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+                <div class="upload-icon-circle">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                        <polyline points="9 15 12 12 15 15"></polyline>
+                    </svg>
+                </div>
+                <h3 class="upload-title">Drop your DOCX blog document here</h3>
+                <p class="upload-desc">The parser will automatically extract headings, paragraphs, lists, bold/italic text, embedded images, and FAQs into structured Kofuku blog components.</p>
+                <button type="button" class="btn-outline" style="pointer-events: none;">Browse DOCX from Computer</button>
+            </div>
+
+            <!-- Table Filter & Search -->
+            <div class="table-filter-bar">
+                <div class="filter-left">
+                    <div class="table-search">
+                        <input type="text" class="form-input" id="tableSearchInput" placeholder="Search blogs by title or author..." oninput="filterBlogsTable()" />
+                    </div>
+                    <select class="filter-select" id="statusFilterSelect" onchange="filterBlogsTable()">
+                        <option value="all">All Statuses</option>
+                        <option value="published">Published Only</option>
+                        <option value="draft">Drafts Only</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Blog Table -->
+            <div class="blog-table-container">
+                <table class="blog-table">
+                    <thead>
+                        <tr>
+                            <th>Blog Details</th>
+                            <th>Author & Reviewer</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Last Modified</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="blogTableBody">
+                        <!-- Populated dynamically by blog.js -->
+                    </tbody>
+                </table>
+                <div class="empty-table-state" id="emptyTableState" style="display: none;">
+                    <div class="empty-icon">📂</div>
+                    <h3>No Blogs Found</h3>
+                    <p style="color: var(--text-muted); font-size: 14px; margin-top: 6px;">Upload a DOCX file above or create a new blog to get started.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================
+             2. PUBLIC BLOG TEMPLATE VIEW (Kofuku 1-to-1 Reproduction)
+             ================================================================ -->
+        <section class="public-blog-view" id="publicBlogSection" style="display: none;">
+            <div class="single-blog-wrapper" id="singleBlogContainer">
+                
+                <!-- Breadcrumbs -->
+                <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+                    <ul class="breadcrumb-list">
+                        <li class="breadcrumb-item">
+                            <a href="#" onclick="switchMainView('public'); return false;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                                <span>Home</span>
+                            </a>
+                        </li>
+                        <li class="breadcrumb-separator">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </li>
+                        <li class="breadcrumb-item">
+                            <a href="#" id="viewBreadcrumbCategory">Contagion</a>
+                        </li>
+                        <li class="breadcrumb-separator">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </li>
+                        <li class="breadcrumb-item breadcrumb-active" id="viewBreadcrumbTitle">
+                            Fever and Pyrexia: Why It Happens and How to Manage It
+                        </li>
+                    </ul>
+                </nav>
+
+                <!-- Hero Header -->
+                <div class="blog-hero">
+                    <h1 class="blog-title" id="viewBlogTitle">Fever and Pyrexia: Why It Happens and How to Manage It</h1>
+                    <div class="blog-subtitle" id="viewBlogSubtitle">
+                        A fever, also known as pyrexia, is a natural response from your body's immune system. Learn why fevers happen, how to safely manage symptoms with home remedies and medication, and when it’s time to call a doctor.
+                    </div>
+
+                    <!-- Author, Reviewer & Meta Info Bar -->
+                    <div class="blog-meta-bar">
+                        <div class="author-doctor-group">
+                            <div class="author-pill">
+                                <img src="https://kofuku-staging-cms.s3.ap-south-1.amazonaws.com/2_3415176660.png" alt="Author" class="author-avatar" id="viewAuthorAvatar" />
+                                <div class="author-text">
+                                    <div class="author-name">Written by <a href="#" id="viewAuthorName">Shubhechhya Mukherjee</a></div>
+                                    <div class="doctor-reviewer" id="viewDoctorRow">Reviewed by <a href="#" id="viewDoctorName">Dr. Ananthakrishnan Chandrasekhar</a>, MD</div>
+                                </div>
+                            </div>
+                            <div class="meta-stats-group">
+                                <span class="meta-date" id="viewPublishDate">Updated on October 7, 2026</span>
+                                <span>•</span>
+                                <span class="meta-readtime" id="viewReadMinutes">4 min read</span>
+                                <button type="button" class="btn-bookmark" title="Bookmark this article" onclick="toggleBookmark()">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Social Share Links -->
+                        <ul class="share-links-group">
+                            <li>
+                                <button class="share-btn" title="Share on Facebook" onclick="shareOnFacebook()">
+                                    <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M9 8H6v4h3v12h5V12h3.642L18 8h-4V6.333C14 5.374 14.5 5 15.5 5H18V0h-3.808C10.595 0 9 1.583 9 4.615V8z"/></svg>
+                                </button>
+                            </li>
+                            <li>
+                                <button class="share-btn" title="Share on WhatsApp" onclick="shareOnWhatsApp()">
+                                    <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+                                </button>
+                            </li>
+                            <li>
+                                <button class="share-btn" title="Share on X" onclick="shareOnTwitter()">
+                                    <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                </button>
+                            </li>
+                            <li>
+                                <button class="share-btn" title="Copy Link" onclick="copyBlogLink()">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Key Takeaways / Table of Contents -->
+                <div class="key-takeaways-card" id="keyTakeawaysWrapper">
+                    <h2 class="key-takeaways-title">Key Takeaways</h2>
+                    <ul class="key-takeaways-list" id="viewKeyTakeawaysList">
+                        <!-- Populated dynamically -->
+                    </ul>
+                </div>
+
+                <!-- Featured Cover Image -->
+                <div class="featured-image-box" id="viewCoverImageBox">
+                    <img src="" alt="Blog Featured Image" class="featured-image" id="viewCoverImage" />
+                </div>
+
+                <!-- Structured Content Body (Folds) -->
+                <div class="blog-content-body" id="viewContentFoldsContainer">
+                    <!-- Folds rendered here dynamically -->
+                </div>
+
+                <!-- FAQ Accordion Section -->
+                <div class="faq-section-container" id="viewFaqSection">
+                    <h2 class="faq-section-heading">FAQ</h2>
+                    <div class="faq-list" id="viewFaqList">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Related Blogs Grid -->
+                <div class="related-blogs-section">
+                    <h2 class="related-blogs-heading">Related Articles</h2>
+                    <div class="related-cards-grid" id="relatedBlogsGrid">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Kofuku Footer -->
+    <footer class="kofuku-footer">
+        <div class="footer-container">
+            <div class="footer-top">
+                <div class="logo-text">Kofuku<span>Social</span></div>
+                <ul class="footer-links">
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Use</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">Join Us</a></li>
+                    <li><a href="#">Help & Support</a></li>
+                </ul>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 Kofuku Technologies Private Limited. All rights reserved.</span>
+                <span>An India-based anonymous community for open conversations about health & wellness.</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ================================================================
+         3. MODALS: EDIT BLOG MODAL & UPLOAD MODAL
+         ================================================================ -->
+
+    <!-- Edit Blog Modal -->
+    <div class="modal-backdrop" id="editModalBackdrop">
+        <div class="modal-dialog modal-dialog-large">
+            <div class="modal-header">
+                <h3 class="modal-title" id="editModalHeaderTitle">Edit Extracted Blog Content</h3>
+                <button type="button" class="modal-close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="blogEditForm" onsubmit="handleSaveBlogForm(event)">
+                    <input type="hidden" id="editBlogId" />
+
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label class="form-label">Blog Title *</label>
+                            <input type="text" class="form-input" id="formTitle" required />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Slug (URL friendly)</label>
+                            <input type="text" class="form-input" id="formSlug" required />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Subtitle / Excerpt</label>
+                        <textarea class="form-textarea" id="formSubtitle" rows="2"></textarea>
+                    </div>
+
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label class="form-label">Author Name</label>
+                            <input type="text" class="form-input" id="formAuthor" value="Shubhechhya Mukherjee" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Doctor Reviewer</label>
+                            <input type="text" class="form-input" id="formReviewer" value="Dr. Ananthakrishnan Chandrasekhar, MD" />
+                        </div>
+                    </div>
+
+                    <div class="form-row-2">
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <input type="text" class="form-input" id="formCategory" value="Contagion" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Read Time (minutes)</label>
+                            <input type="number" class="form-input" id="formReadMinutes" value="4" min="1" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Featured Cover Image URL / Data URI</label>
+                        <input type="text" class="form-input" id="formCoverUrl" placeholder="https://... or data:image/..." />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Structured Blog Content (HTML / Semantic Body)</label>
+                        <textarea class="form-textarea" id="formContentBody" rows="12" style="font-family: monospace; font-size: 13px;"></textarea>
+                        <small style="color: var(--text-muted); display: block; margin-top: 4px;">Supports extracted headings, paragraphs, lists, links, and base64 images.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">FAQs (JSON format or auto-extracted questions)</label>
+                        <textarea class="form-textarea" id="formFaqsJson" rows="6" style="font-family: monospace; font-size: 13px;" placeholder='[{"question": "Q...", "answer": "A..."}]'></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-outline" onclick="closeEditModal()">Cancel</button>
+                <button type="button" class="btn-outline" onclick="previewFromEditModal()">Live Preview</button>
+                <button type="button" class="btn-primary" onclick="submitBlogForm('draft')">Save as Draft</button>
+                <button type="button" class="btn-primary" style="background:#10b981;" onclick="submitBlogForm('published')">Save & Publish</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer"></div>
+
+</body>
+</html>
